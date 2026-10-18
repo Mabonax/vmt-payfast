@@ -19,7 +19,7 @@ php artisan demo:create-user your-email@example.com
 php artisan serve --host=127.0.0.1 --port=8086
 ```
 
-Open http://127.0.0.1:8086/login. Sign in and create a fixed server-priced R1.05 test order. Incoming amount fields are ignored. Submit its signed form to PayFast sandbox. Order pages show current payment/order state, fulfilment count, and scoped redacted audit rows. Other users cannot inspect the order. Package return/cancel pages never complete a payment; the return page shows verified state only through the demo's ownership gate. Return to “My test orders” in the demo to inspect fulfilment and audit details.
+Open http://127.0.0.1:8086/login for local-only development, or the public HTTPS login when ngrok secure cookies are enabled. Sign in and create a fixed server-priced R5 test order. Incoming amount fields are ignored. Submit its signed form to PayFast sandbox. Order pages show current payment/order state, fulfilment count, and scoped redacted audit rows. Other users cannot inspect the order. Package return/cancel pages never complete a payment; the return page shows verified state only through the demo's ownership gate. Return to “My test orders” to inspect fulfilment and audit details. The earlier R1.05 attempt remains correctly displayed at its original amount.
 
 ## Configure secrets privately
 
@@ -37,7 +37,7 @@ PAYFAST_NOTIFY_URL=https://your-approved-host/payments/payfast/notify
 
 Obtain the real sandbox values from https://sandbox.payfast.co.za/. Set the passphrase there to match exactly. Do not paste credentials in chat or commit the local `.env`. After changing it run `php artisan config:clear`. The committed `.env.example` contains blank placeholders. Keep the generated APP_KEY, dedicated SQLite DB, `QUEUE_CONNECTION=database`, `APP_DEBUG=false`, and a non-production APP_ENV. HTTP middleware and the merchant resolver both prohibit production payments.
 
-A public HTTPS callback is a separate prerequisite. Bind an approved TLS ingress to the loopback demo, then follow INGRESS.md. If a cloud tunnel is used, its authenticated client-IP metadata and overwrite guarantees must be reviewed before enabling the adapter. A tunnel URL alone does not prove provider source. No tunnel account is provisioned by this work.
+A public HTTPS callback is a separate prerequisite. Bind an approved TLS ingress to the loopback demo, then follow INGRESS.md. The user's existing ngrok account is now configured for this local sandbox; NGROK_SETUP.md documents the free-plan source adapter and observed public spoofing checks. No new tunnel account was provisioned. A tunnel URL alone does not prove provider source, and checkout acceptance alone does not establish a completed payment.
 
 ## Durable operation and recovery
 

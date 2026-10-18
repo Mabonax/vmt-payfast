@@ -1,0 +1,12 @@
+on_http_request:
+  - actions:
+      - type: remove-headers
+        config:
+          headers:
+            - x-payfast-client-ip
+            - x-forwarded-proto
+      - type: add-headers
+        config:
+          headers:
+            x-payfast-client-ip: "${conn.client_ip}"
+            x-forwarded-proto: "https"

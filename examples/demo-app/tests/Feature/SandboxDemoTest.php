@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Http\Middleware\NormalizeNgrokIngress;
 use App\Models\DemoOrder;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -25,6 +27,7 @@ final class SandboxDemoTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        config(['demo.ngrok_ingress' => false]);
         config(['payfast.mode' => 'sandbox', 'payfast.merchant_id' => '12345678', 'payfast.merchant_key' => 'test-key', 'payfast.passphrase' => 'unit-test-passphrase', 'payfast.return_url' => 'https://example.test/payments/payfast/return', 'payfast.cancel_url' => 'https://example.test/payments/payfast/cancel', 'payfast.notify_url' => 'https://example.test/payments/payfast/notify']);
         Http::preventStrayRequests();
     }
@@ -42,8 +45,8 @@ final class SandboxDemoTest extends TestCase
         $this->post('/checkout')->assertRedirect('/login');
         $payment = $this->checkout();
         $order = DemoOrder::firstOrFail();
-        $this->assertSame(105, $payment->amount_cents);
-        $this->assertSame(105, $order->amount_cents);
+        $this->assertSame(500, $payment->amount_cents);
+        $this->assertSame(500, $order->amount_cents);
         $this->get('/orders/'.$order->reference)->assertSee('PENDING')->assertDontSee('unit-test-passphrase')->assertDontSee('credential_snapshot');
         $this->actingAs(User::factory()->create());
         $this->get('/orders/'.$order->reference)->assertNotFound();
@@ -78,7 +81,7 @@ final class SandboxDemoTest extends TestCase
             }
         });
         Http::fake(['*/eng/query/validate' => Http::response('VALID')]);
-        $fields = ['m_payment_id' => $payment->reference, 'pf_payment_id' => '777777', 'payment_status' => 'COMPLETE', 'amount_gross' => '1.05', 'merchant_id' => '12345678'];
+        $fields = ['m_payment_id' => $payment->reference, 'pf_payment_id' => '777777', 'payment_status' => 'COMPLETE', 'amount_gross' => '5.00', 'merchant_id' => '12345678'];
         $fields['signature'] = app(SignatureService::class)->notification($fields, 'unit-test-passphrase');
         app(NotificationService::class)->process(http_build_query($fields), '192.0.2.1');
         $this->assertSame(PaymentStatus::Completed, $payment->fresh()->status);
@@ -101,5 +104,51 @@ final class SandboxDemoTest extends TestCase
         $this->get('/payments/payfast/cancel?payfast_reference='.$payment->reference)->assertOk();
         $this->assertSame(PaymentStatus::Pending, $payment->fresh()->status);
         $this->assertSame(0, DemoOrder::firstOrFail()->completion_count);
+    }
+
+    public function test_https_header_is_trusted_only_from_local_ingress(): void
+    {
+        $this->app['router']->get('/test-ingress-scheme', fn (Request $request) => response()->json(['secure' => $request->isSecure()]));
+        $this->withServerVariables(['REMOTE_ADDR' => '127.0.0.1'])
+            ->get('http://example.test/test-ingress-scheme', ['X-Forwarded-Proto' => 'https'])->assertJson(['secure' => true]);
+        $this->withServerVariables(['REMOTE_ADDR' => '192.0.2.10'])
+            ->get('http://example.test/test-ingress-scheme', ['X-Forwarded-Proto' => 'https'])->assertJson(['secure' => false]);
+    }
+
+    public function test_ngrok_uses_appended_source_and_removes_forged_prefixes(): void
+    {
+        config(['demo.ngrok_ingress' => true, 'app.url' => 'https://acceptance.ngrok-free.app']);
+        $middleware = new NormalizeNgrokIngress;
+        $request = Request::create('http://acceptance.ngrok-free.app/');
+        $request->server->set('REMOTE_ADDR', '127.0.0.1');
+        $request->headers->set('X-PayFast-Client-IP', '192.0.2.1');
+        $request->headers->set('X-Forwarded-For', '192.0.2.1, 198.51.100.10');
+        $request->headers->set('X-Forwarded-Proto', 'http, https');
+        $middleware->handle($request, function ($normalized) {
+            $this->assertSame('198.51.100.10', $normalized->header('X-PayFast-Client-IP'));
+            $this->assertSame('https', $normalized->header('X-Forwarded-Proto'));
+        });
+    }
+
+    public function test_ngrok_normalization_fails_closed_for_untrusted_or_malformed_requests(): void
+    {
+        config(['demo.ngrok_ingress' => true, 'app.url' => 'https://acceptance.ngrok-free.app']);
+        foreach ([
+            ['192.0.2.2', 'acceptance.ngrok-free.app', '198.51.100.10', 'https'],
+            ['127.0.0.1', 'wrong.ngrok-free.app', '198.51.100.10', 'https'],
+            ['127.0.0.1', 'acceptance.ngrok-free.app', '', 'https'],
+            ['127.0.0.1', 'acceptance.ngrok-free.app', '198.51.100.10, invalid', 'https'],
+            ['127.0.0.1', 'acceptance.ngrok-free.app', '198.51.100.10', 'https, http'],
+        ] as [$peer, $host, $source, $proto]) {
+            $request = Request::create('http://'.$host.'/');
+            $request->server->set('REMOTE_ADDR', $peer);
+            $request->headers->set('X-PayFast-Client-IP', '192.0.2.1');
+            $request->headers->set('X-Forwarded-For', $source);
+            $request->headers->set('X-Forwarded-Proto', $proto);
+            (new NormalizeNgrokIngress)->handle($request, function ($normalized) {
+                $this->assertNull($normalized->header('X-PayFast-Client-IP'));
+                $this->assertNull($normalized->header('X-Forwarded-Proto'));
+            });
+        }
     }
 }

@@ -2,7 +2,7 @@
 
 Status: **not executed**. Automated HTTP mocks are not provider proof.
 
-Phase 2 provides a separate app at `C:\xampp\htdocs\vmt_payfast_demo`; see DEMO_APPLICATION.md. User-supplied sandbox settings are present privately, but all callback URLs still use `your-approved-public-host`. Provider acceptance is BLOCKED until approved HTTPS/source handling is configured per INGRESS.md. No source check is disabled.
+Phase 2 provides a separate app at `C:\xampp\htdocs\vmt_payfast_demo`; see DEMO_APPLICATION.md. User-supplied sandbox settings and real ngrok HTTPS callbacks are configured privately. Public ingress spoofing checks passed (NGROK_SETUP.md). PayFast accepted the first checkout but reported “Unable to verify payment” on the wallet action, with no provider ITN received. Completed provider acceptance remains BLOCKED; no source check is disabled.
 
 1. Register/sign in at https://sandbox.payfast.co.za/ and configure your sandbox merchant ID, key and account passphrase. Obtain them through PayFast's dashboard; never paste them into tickets or commit them.
 2. Install the package in a Laravel staging application and migrate. Set a valid persistent APP_KEY. Use an isolated test order loaded through the application's normal service/repository.

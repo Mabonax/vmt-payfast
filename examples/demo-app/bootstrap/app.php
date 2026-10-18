@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\NormalizeNgrokIngress;
 use App\Http\Middleware\SandboxOnly;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
@@ -13,7 +14,12 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withEvents(discover: false)
     ->withRouting(web: __DIR__.'/../routes/web.php', commands: __DIR__.'/../routes/console.php', health: '/up')
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->prepend(NormalizeNgrokIngress::class);
         $middleware->append(SandboxOnly::class);
+        $middleware->trustProxies(
+            at: ['127.0.0.1'],
+            headers: Request::HEADER_X_FORWARDED_PROTO,
+        );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->dontFlash(['password', 'password_confirmation', 'merchant_key', 'passphrase', 'signature']);

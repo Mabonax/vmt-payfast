@@ -45,7 +45,7 @@ final class DemoController
         try {
             $checkout = DB::transaction(function () use ($request, $gateway) {
                 $order = new DemoOrder;
-                $order->forceFill(['id' => (string) Str::uuid(), 'reference' => (string) Str::uuid(), 'user_id' => $request->user()->id, 'amount_cents' => 105, 'status' => 'PENDING', 'completion_count' => 0])->save();
+                $order->forceFill(['id' => (string) Str::uuid(), 'reference' => (string) Str::uuid(), 'user_id' => $request->user()->id, 'amount_cents' => 500, 'status' => 'PENDING', 'completion_count' => 0])->save();
 
                 return $gateway->createCheckout(new CheckoutRequest($order->reference, $order->amount_cents, 'VMT sandbox test order', orderReference: $order->reference));
             });

@@ -2,15 +2,17 @@
 
 2026-10-18. **HOLD production release/tagging.** Automated and MySQL acceptance passed; real PayFast sandbox acceptance and deployment checks remain outstanding. No production approval or version tag was created.
 
+**Local ngrok follow-up:** HTTPS is now established and all callback URLs are configured privately. Public source-header spoofing/HTTPS checks passed. The demo now passes 10 tests / 53 assertions and prepares fixed R5 sandbox orders. PayFast accepted the initial R1.05 checkout but displayed “Unable to verify payment” after the wallet action; no provider ITN reached Laravel for that attempt, and it remains PENDING with zero fulfilments. A fresh R5 attempt is prepared to rule out the documented payment minimum; its outcome is not yet verified. See NGROK_SETUP.md. Earlier CI counts below remain the evidence for their specified commits.
+
 | Capability | Implemented | Automated test passed | Real sandbox verified | MySQL verified | Blocked / limitation |
 |---|---|---|---|---|---|
-| One-time ZAR checkout and ordered signatures | Yes | Laravel 12/13 | No | Payment storage exercised | Approved HTTPS callbacks missing |
+| One-time ZAR checkout and ordered signatures | Yes | Laravel 12/13 | Checkout accepted; completion not verified | Payment storage exercised | Provider wallet verification failed on first attempt |
 | Signature/source/merchant/amount/server validation | Yes | Mocked provider responses and rejection tests | No | Concurrent verified writes exercised | No actual provider ITN received |
-| Strict ingress source adapter | Yes, opt-in | Trusted/untrusted/malformed/missing IP cases | No | Not DB-dependent | Actual ingress/header overwrite review required |
+| Strict ingress source adapter | Yes, opt-in | Trusted/untrusted/malformed/missing IP cases; live ngrok spoofing checks | No provider ITN yet | Not DB-dependent | Real provider source still needs acceptance |
 | Locks, one completion/outbox/audit | Yes | Two independent PHP processes | No provider claim | **MySQL 8.4 passed in both framework jobs** | Local MySQL/Docker unavailable |
 | Durable fulfilment ledger and queue replay | Yes | Package replay/rollback; real demo DB queue worker | No | **One marker in concurrent processing** | External effects require host idempotency |
 | Outbox recovery | Yes | Listener retry; rejects unsafe outer transaction | Not provider-dependent | Completion uniqueness verified | At-least-once delivery; supervise scheduler/workers |
-| Authenticated isolated demo, server-priced orders | Yes | **7 tests / 39 assertions** | No | Demo uses dedicated SQLite | No authenticated manual provider checkout |
+| Authenticated isolated demo, server-priced orders | Yes | **10 tests / 53 assertions locally** | Checkout reached; wallet verification failed | Demo uses dedicated SQLite | Completed provider flow remains blocked |
 | Return/cancel, scoped status and audit views | Yes | Browser cannot complete; cross-user denial | No | No provider claim | External return/cancel acceptance pending |
 | Tenant/merchant isolation and credential rotation | Yes | Scoped checks and original snapshot tests | No | Scoped concurrent fulfilment | Real host resolver/ownership review pending |
 | Pending exception report and diagnostics | Yes | Scoped report; controlled failure categories | No | Not settlement proof | Live missing-ITN diagnosis pending |
@@ -65,9 +67,9 @@ Passed: 7 tests / 39 assertions, minute-based outbox schedule and three payment 
 
 ## Real sandbox result: BLOCKED
 
-User-supplied sandbox settings were privately copied from the ignored package `.env` to the demo `.env`, preserving APP_KEY. Presence does not verify the provider account. Callback URLs still contain `your-approved-public-host`. No approved HTTPS ingress, provider checkout/reference, actual ITN, provider confirmation or real fulfilment evidence exists. No security check was bypassed.
+User-supplied sandbox settings were privately copied from the ignored package `.env` to the demo `.env`, preserving APP_KEY. The existing ngrok account token was updated by the user, HTTPS callbacks configured and live spoofing checks passed. The user explicitly approved a disposable tester and two-minute single-use login; that temporary route was removed after login. Scheduler and worker run in hidden background processes.
 
-Configure three real callback URLs, approve ingress source handling per INGRESS.md, clear config cache, create a local tester and run scheduler/worker. Then execute SANDBOX_TESTING.md and record redacted evidence. Document whether the current sandbox supports ITN repeats; do not fabricate replay behavior.
+PayFast accepted the signed R1.05 checkout and displayed its sandbox wallet. After the user's wallet action, the provider reported “Unable to verify payment”. No provider ITN reached the demo for that attempt; the payment remains PENDING with no fulfilment. Public callback POST probes reach Laravel and are correctly rejected as malformed; those probes are not provider notifications. A fresh R5 sandbox attempt is prepared, without claiming the amount was the root cause. Real payment completion, ITN signature/source/merchant/amount/server confirmation and fulfilment remain unverified. No security check was bypassed.
 
 ## Remaining production checks
 

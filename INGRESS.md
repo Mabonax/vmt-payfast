@@ -27,6 +27,6 @@ location / {
 
 This fragment assumes TLS is configured in the enclosing approved server, and `$remote_addr` is the true provider socket peer. It is not a full deployment configuration. If another proxy/tunnel precedes Nginx, do not use a cloud relay address as the provider IP. Review that service's authenticated metadata, trusted-proxy/real-IP rules, header overwrite and origin network restrictions. Never copy client-supplied X-Forwarded-For into the trusted header. Configure Laravel's HTTPS/session handling for that approved ingress separately; the package does not change global trusted proxies.
 
-No tunnel or public endpoint is currently approved/configured by this implementation. Unit tests prove trusted/untrusted/missing/malformed header behavior, not a live ingress or provider callback. The default remains disabled. There is no source-verification bypass switch.
+The package default remains disabled. For the user-approved local ngrok sandbox, the demo now has an opt-in ngrok-specific normalizer using ngrok's documented appended client-IP/scheme values, followed by this same package source validator. Public spoofing and HTTPS checks passed; see NGROK_SETUP.md. This does not establish a real provider payment completion or constitute a generic proxy-chain policy. There is no source-verification bypass switch.
 
 Framework/ingress references: https://nginx.org/en/docs/http/ngx_http_proxy_module.html and the official PayFast source validation evidence in docs/PROTOCOL.md.
