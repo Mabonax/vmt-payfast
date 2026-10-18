@@ -37,7 +37,26 @@ jobs:
       - run: composer validate --strict
       - run: php vendor/bin/pint --test
       - run: php vendor/bin/phpunit
-      - run: php vendor/bin/phpunit --filter MySqlConcurrencyTest
+      - run: php vendor/bin/phpunit --filter test_two_process_duplicate_itn_and_fulfilment --fail-on-skipped
         env:
           PAYFAST_TEST_MYSQL: '1'
           PAYFAST_TEST_DB_PASSWORD: ephemeral-test-password
+  sandbox-demo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_sqlite
+          coverage: none
+      - name: Create isolated Laravel demo
+        run: composer create-project laravel/laravel "$RUNNER_TEMP/payfast-demo" '^13.0' --no-interaction --prefer-dist
+      - name: Install overlay and local package
+        run: |
+          cp -R examples/demo-app/. "$RUNNER_TEMP/payfast-demo/"
+          cd "$RUNNER_TEMP/payfast-demo"
+          composer config repositories.vmt "{\"type\":\"path\",\"url\":\"$GITHUB_WORKSPACE\",\"options\":{\"versions\":{\"vmt/payfast\":\"dev-main\"}}}"
+          composer require vmt/payfast:dev-main --no-interaction --prefer-dist
+          php artisan migrate --force
+          php artisan test --compact

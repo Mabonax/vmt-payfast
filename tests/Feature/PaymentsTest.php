@@ -350,4 +350,20 @@ final class PaymentsTest extends TestCase
         $this->assertSame(1, DB::table('payfast_events')->where('outcome', 'retryable_failure')->count());
         $this->assertSame(0, DB::table('payfast_outbox')->count());
     }
+
+    public function test_outbox_rejects_outer_transaction_before_delivery_marker_can_be_committed(): void
+    {
+        $payment = $this->checkout();
+        app(NotificationService::class)->process($this->body($payment), '192.0.2.1');
+        Event::fake([PaymentCompleted::class]);
+        try {
+            DB::transaction(fn () => app(OutboxService::class)->dispatch());
+            $this->fail('Expected unsafe dispatch rejection');
+        } catch (PaymentException) {
+            $this->assertNull(DB::table('payfast_outbox')->value('dispatched_at'));
+        }
+        Event::assertNotDispatched(PaymentCompleted::class);
+        app(OutboxService::class)->dispatch();
+        Event::assertDispatchedTimes(PaymentCompleted::class, 1);
+    }
 }
