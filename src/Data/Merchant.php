@@ -20,14 +20,14 @@ final readonly class Merchant
 
     public function validate(): void
     {
-        if (! in_array($this->mode, ['sandbox', 'production'], true) || $this->identity === '' || ! ctype_digit($this->merchantId) || trim($this->merchantKey) === '' || trim($this->passphrase) === '') {
+        if (! in_array($this->mode, ['sandbox', 'production'], true) || $this->identity === '' || strlen($this->identity) > 255 || ! preg_match('/^[0-9]{8}$/D', $this->merchantId) || trim($this->merchantKey) === '' || trim($this->passphrase) === '' || trim($this->passphrase) !== $this->passphrase) {
             throw new PaymentException('Invalid PayFast mode or missing merchant credentials/passphrase.');
         }
         if ($this->mode === 'production' && ($this->merchantId === '10000100' || $this->merchantKey === '46f0cd694581a')) {
             throw new PaymentException('Known sandbox credentials cannot be used in production.');
         }
         foreach ([$this->returnUrl, $this->cancelUrl, $this->notifyUrl] as $url) {
-            if (! filter_var($url, FILTER_VALIDATE_URL) || parse_url($url, PHP_URL_SCHEME) !== 'https' || parse_url($url, PHP_URL_USER) !== null) {
+            if (! filter_var($url, FILTER_VALIDATE_URL) || parse_url($url, PHP_URL_SCHEME) !== 'https' || parse_url($url, PHP_URL_USER) !== null || parse_url($url, PHP_URL_FRAGMENT) !== null) {
                 throw new PaymentException('PayFast callback URLs must be HTTPS URLs without credentials.');
             }
         }

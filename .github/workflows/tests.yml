@@ -1,0 +1,43 @@
+name: Package verification
+on: [push, pull_request]
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - php: '8.3'
+            laravel: '^12.0'
+            testbench: '^10.0'
+            phpunit: '^11.5'
+          - php: '8.3'
+            laravel: '^13.0'
+            testbench: '^11.0'
+            phpunit: '^12.0'
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: payfast_test
+          MYSQL_USER: payfast_test
+          MYSQL_PASSWORD: ephemeral-test-password
+          MYSQL_ROOT_PASSWORD: ephemeral-root-password
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: pdo_sqlite, pdo_mysql
+          coverage: none
+      - run: composer update --with 'laravel/framework:${{ matrix.laravel }}' --with 'orchestra/testbench:${{ matrix.testbench }}' --with 'phpunit/phpunit:${{ matrix.phpunit }}' --no-interaction --prefer-dist
+      - run: composer validate --strict
+      - run: php vendor/bin/pint --test
+      - run: php vendor/bin/phpunit
+      - run: php vendor/bin/phpunit --filter MySqlConcurrencyTest
+        env:
+          PAYFAST_TEST_MYSQL: '1'
+          PAYFAST_TEST_DB_PASSWORD: ephemeral-test-password

@@ -50,6 +50,14 @@ final class NotificationService
         } catch (PaymentException $exception) {
             $this->audit($payment?->id, null, 'rejected', $exception->getMessage(), $received);
             throw $exception;
+        } catch (\Throwable $exception) {
+            // Keep infrastructure failures retryable. A broken database may also prevent this audit.
+            try {
+                $this->audit($payment?->id, null, 'retryable_failure', 'processing_unavailable', $received);
+            } catch (\Throwable) {
+                // Host infrastructure monitoring must capture redacted 5xx incidents.
+            }
+            throw $exception;
         }
     }
 

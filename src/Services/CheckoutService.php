@@ -35,8 +35,8 @@ final class CheckoutService
         $fields = [
             'merchant_id' => $merchant->merchantId,
             'merchant_key' => $merchant->merchantKey,
-            'return_url' => $merchant->returnUrl,
-            'cancel_url' => $merchant->cancelUrl,
+            'return_url' => $merchant->returnUrl.(str_contains($merchant->returnUrl, '?') ? '&' : '?').http_build_query(['payfast_reference' => $reference]),
+            'cancel_url' => $merchant->cancelUrl.(str_contains($merchant->cancelUrl, '?') ? '&' : '?').http_build_query(['payfast_reference' => $reference]),
             'notify_url' => $merchant->notifyUrl,
             'name_first' => $request->firstName,
             'name_last' => $request->lastName,
