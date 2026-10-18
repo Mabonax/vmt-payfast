@@ -1,5 +1,7 @@
 # Phase 1 implementation report — 2026-10-18
 
+Historical snapshot. Current Phase 2 delivery, remote/branch status and CI evidence are in PHASE2_REPORT.md and PRODUCTION_READINESS.md.
+
 1. **Repository and branch:** `C:\xampp\htdocs\vmt_payfast`, `codex/vmt-payfast-integration`. Initially empty and not a Git repository; initialized as the requested dedicated package repository. No unrelated files or previous changes existed. No remote is configured, so nothing has been pushed or merged.
 
 2. **Architecture:** reusable `vmt/payfast` package; DI gateway/merchant/source contracts, immutable checkout DTOs, explicit payment state enum, encrypted Eloquent storage, independent raw ITN validation, transaction locks, audit history, durable outcome outbox and same-database fulfilment ledger. Host applications retain order ownership, pricing, domain services and repositories.

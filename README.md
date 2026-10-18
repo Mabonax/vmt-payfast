@@ -2,11 +2,13 @@
 
 Standalone `vmt/payfast` Composer package for Laravel 12/13 and PHP 8.3+. One-time ZAR hosted checkout, verified ITN completion, encrypted credential snapshots, tenant/merchant context, durable outcome delivery, and database-backed fulfilment idempotency.
 
-**Release status: integration candidate; real sandbox acceptance and MySQL concurrency acceptance are required before production.** See [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md) and [VERIFICATION.md](VERIFICATION.md).
+**Release status: integration candidate; real sandbox acceptance remains required before production.** MySQL 8.4 concurrency passed in the baseline GitHub CI; Phase 2 evidence and outstanding deployment requirements are in [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md).
 
 ## Installation and use
 
 See [INSTALLATION.md](INSTALLATION.md), [CONFIGURATION.md](CONFIGURATION.md), [MULTI_MERCHANT.md](MULTI_MERCHANT.md), [SECURITY.md](SECURITY.md), and [SANDBOX_TESTING.md](SANDBOX_TESTING.md).
+
+GitHub installation uses a Composer VCS repository and `vmt/payfast:dev-main` until an approved tag exists. Local sandbox demo: [DEMO_APPLICATION.md](DEMO_APPLICATION.md); optional strict proxy source handling: [INGRESS.md](INGRESS.md).
 
 ```php
 use Vmt\PayFast\Contracts\PaymentGateway;
@@ -39,6 +41,8 @@ The default return page displays current state to authenticated users authorized
 ## Delivery and reconciliation
 
 Schedule `payfast:dispatch-outbox` every minute. Events are **at least once**, because a process can fail after a listener ran and before the delivery marker is committed. Normal repeated ITNs create one completion outbox row. Consumers must use the durable fulfilment ledger. No exactly-once claim is made for arbitrary external effects. Callback failure rolls back both the business update and fulfilment marker. Queue consumers must use durable queues; operations on other connections or external APIs need an application outbox and provider idempotency.
+
+Dispatch outbox events outside application database transactions. Phase 2 rejects dispatch inside an outer transaction: deferred after-commit listeners could otherwise fail after the delivery marker was already committed. The command and scheduler naturally run outside such transactions.
 
 `ReconciliationService::pending($merchant, $tenant, $before)` returns a scoped pending exception report. Operators compare it with the merchant dashboard and request a provider ITN resend; resends undergo all validation. There is no speculative REST transaction lookup, manual completion bypass, or settlement reconciliation.
 

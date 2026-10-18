@@ -1,5 +1,7 @@
 # Verification evidence
 
+**Current Phase 2 evidence:** see PRODUCTION_READINESS.md. Remote Laravel 12/13 passed 30 active tests / 183 assertions each; separate MySQL 8.4 tests passed 1 test / 9 assertions / zero skips each; the isolated demo passed 7 tests / 39 assertions. The sections below preserve the Phase 1 baseline and do not supersede the current matrix.
+
 Environment: Windows, PHP 8.3.35, Composer 2.10.3; inspected 2026-10-18. Empty repository baseline: no previous code, tests or failures. Package runner is PHPUnit/Testbench; no root Artisan application exists. Pint is installed; PHPStan/Larastan was not preconfigured and is not installed.
 
 ## Commands
