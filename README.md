@@ -10,6 +10,8 @@ See [INSTALLATION.md](INSTALLATION.md), [CONFIGURATION.md](CONFIGURATION.md), [M
 
 GitHub installation uses a Composer VCS repository and `vmt/payfast:dev-main` until an approved tag exists. Local sandbox demo: [DEMO_APPLICATION.md](DEMO_APPLICATION.md); optional strict proxy source handling: [INGRESS.md](INGRESS.md).
 
+First-application adoption and staging: [APPLICATION_INTEGRATION.md](APPLICATION_INTEGRATION.md). Deployment/recovery preparation: [PRODUCTION_OPERATIONS.md](PRODUCTION_OPERATIONS.md). Versioned staging candidate: `v0.1.0-rc.1` after publication; live payments require separate host approval.
+
 ```php
 use Vmt\PayFast\Contracts\PaymentGateway;
 use Vmt\PayFast\Data\CheckoutRequest;

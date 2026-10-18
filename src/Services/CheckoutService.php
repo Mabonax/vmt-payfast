@@ -27,6 +27,9 @@ final class CheckoutService
         }
         $merchant = $this->merchants->resolve($request->merchantContext, $request->tenantId);
         $merchant->validate();
+        if ($merchant->mode === 'production' && $request->amountCents < 500) {
+            throw new PaymentException('PayFast production one-time payments require at least ZAR 5.00.');
+        }
         if ($merchant->tenantId !== $request->tenantId) {
             throw new PaymentException('Merchant tenant mismatch.');
         }

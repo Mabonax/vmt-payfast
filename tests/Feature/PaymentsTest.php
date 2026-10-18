@@ -84,8 +84,25 @@ final class PaymentsTest extends TestCase
     public function test_production_endpoint(): void
     {
         config(['payfast.mode' => 'production']);
-        $response = app(PaymentGateway::class)->createCheckout(new CheckoutRequest('order', 100, 'Item'));
+        $response = app(PaymentGateway::class)->createCheckout(new CheckoutRequest('order', 500, 'Item'));
         $this->assertSame('https://www.payfast.co.za/eng/process', $response->url);
+    }
+
+    public function test_production_minimum_rejects_before_persistence_and_accepts_boundary(): void
+    {
+        config(['payfast.mode' => 'production']);
+        foreach ([1, 499] as $amount) {
+            try {
+                app(PaymentGateway::class)->createCheckout(new CheckoutRequest('below-minimum', $amount, 'Item'));
+                $this->fail('Expected minimum amount rejection.');
+            } catch (PaymentException $exception) {
+                $this->assertStringContainsString('ZAR 5.00', $exception->getMessage());
+                $this->assertSame(0, PaymentTransaction::count());
+            }
+        }
+        $checkout = app(PaymentGateway::class)->createCheckout(new CheckoutRequest('boundary', 500, 'Item'));
+        $this->assertSame('5.00', $checkout->fields['amount']);
+        $this->assertSame(1, PaymentTransaction::count());
     }
 
     public function test_invalid_amount_and_missing_credentials_leave_no_records(): void

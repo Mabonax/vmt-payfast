@@ -41,6 +41,8 @@ The package is not currently published on Packagist. PHP 8.3+, OpenSSL, PDO MySQ
 
 For an isolated sandbox application see [DEMO_APPLICATION.md](DEMO_APPLICATION.md). It runs outside the package source and has no production payment path.
 
+The first application staging candidate is `v0.1.0-rc.1` after publication. With the VCS repository configured, pin it using `composer require vmt/payfast:0.1.0-rc.1` and commit the host lock file. See APPLICATION_INTEGRATION.md and PRODUCTION_OPERATIONS.md. The RC is a reproducible staging baseline, not a stable production release or authorization for live payments.
+
 Laravel discovers `Vmt\PayFast\Providers\PayFastServiceProvider`. If discovery is disabled, add that class to `bootstrap/providers.php`. Migrations load from the package; do not copy and also load duplicate migrations. Back up the database before deployment. Down migrations drop payment history; never use rollback as a casual production operation.
 
 Configure HTTPS callbacks and credentials as described in CONFIGURATION.md. Retain APP_KEY and any previous encryption keys securely; losing keys makes original credential snapshots unreadable. Do not generate a new application key during deployment.
