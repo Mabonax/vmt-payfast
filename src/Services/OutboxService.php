@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Vmt\PayFast\Events\PaymentCancelled;
 use Vmt\PayFast\Events\PaymentCompleted;
 use Vmt\PayFast\Events\PaymentFailed;
+use Vmt\PayFast\Exceptions\PaymentException;
 use Vmt\PayFast\Models\PaymentTransaction;
 
 final class OutboxService
@@ -13,6 +14,9 @@ final class OutboxService
     /** At-least-once delivery: a crash after dispatch can cause a retry. Consumers must be idempotent. */
     public function dispatch(int $limit = 100): int
     {
+        if (DB::transactionLevel() !== 0) {
+            throw new PaymentException('Dispatch the payment outbox outside database transactions.');
+        }
         $count = 0;
         $rows = DB::table('payfast_outbox')->whereNull('dispatched_at')->limit($limit)->get();
         foreach ($rows as $row) {

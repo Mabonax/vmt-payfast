@@ -9,6 +9,7 @@ use Vmt\PayFast\Contracts\PaymentGateway;
 use Vmt\PayFast\Contracts\ProviderSource;
 use Vmt\PayFast\Services\ConfigMerchantResolver;
 use Vmt\PayFast\Services\DnsProviderSource;
+use Vmt\PayFast\Services\IngressProviderSource;
 use Vmt\PayFast\Services\PayFastGateway;
 
 final class PayFastServiceProvider extends ServiceProvider
@@ -17,7 +18,13 @@ final class PayFastServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/../../config/payfast.php', 'payfast');
         $this->app->bindIf(MerchantResolver::class, ConfigMerchantResolver::class);
-        $this->app->bindIf(ProviderSource::class, DnsProviderSource::class);
+        $this->app->bindIf(ProviderSource::class, function ($app) {
+            $source = new DnsProviderSource;
+
+            return config('payfast.ingress.enabled', false)
+                ? new IngressProviderSource($app['request'], $source, config('payfast.ingress.trusted_peers', []))
+                : $source;
+        });
         $this->app->bindIf(PaymentGateway::class, PayFastGateway::class);
     }
 

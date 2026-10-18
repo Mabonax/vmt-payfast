@@ -20,11 +20,15 @@ final class MySqlConcurrencyTest extends TestCase
     {
         parent::defineEnvironment($app);
         if (getenv('PAYFAST_TEST_MYSQL') === '1') {
+            $database = getenv('PAYFAST_TEST_DB_NAME') ?: 'payfast_test';
+            if (! preg_match('/^payfast_test(?:_[a-z0-9]+)?$/D', $database)) {
+                throw new \RuntimeException('Concurrency acceptance requires a dedicated payfast_test database.');
+            }
             $app['config']->set('database.default', 'mysql');
             $app['config']->set('database.connections.mysql', [
                 'driver' => 'mysql', 'host' => getenv('PAYFAST_TEST_DB_HOST') ?: '127.0.0.1',
                 'port' => getenv('PAYFAST_TEST_DB_PORT') ?: '3306',
-                'database' => getenv('PAYFAST_TEST_DB_NAME') ?: 'payfast_test',
+                'database' => $database,
                 'username' => getenv('PAYFAST_TEST_DB_USER') ?: 'payfast_test',
                 'password' => getenv('PAYFAST_TEST_DB_PASSWORD') ?: '',
                 'charset' => 'utf8mb4', 'collation' => 'utf8mb4_unicode_ci', 'prefix' => '', 'strict' => true,

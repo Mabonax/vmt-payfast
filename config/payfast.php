@@ -9,4 +9,8 @@ return [
     'cancel_url' => env('PAYFAST_CANCEL_URL'),
     'notify_url' => env('PAYFAST_NOTIFY_URL'),
     'routes' => true,
+    'ingress' => [
+        'enabled' => env('PAYFAST_INGRESS_ENABLED', false),
+        'trusted_peers' => array_values(array_filter(array_map('trim', explode(',', (string) env('PAYFAST_INGRESS_TRUSTED_PEERS', ''))))),
+    ],
 ];
