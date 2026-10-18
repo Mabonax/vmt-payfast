@@ -29,6 +29,8 @@ Local Docker/MySQL were unavailable; remote MySQL used isolated disposable servi
 
 ## Provider and release decision
 
+**Latest result: the real R5 one-time sandbox flow PASSED**, including real ITN validation, one fulfilment, queued event replay, return-before-ITN and provider cancellation safety. Evidence: docs/SANDBOX_ACCEPTANCE_2026-10-18.md. Production approval remains on hold for deployment review. The paragraphs below preserve the earlier delivery progression, not the current provider acceptance state.
+
 Follow-up: the user's existing ngrok account now provides public HTTPS; callback URLs and secure cookies are configured privately. The free plan rejected paid header-rewrite policy features, so the demo uses a separately tested ngrok-specific normalizer based on the officially documented last appended source/scheme, then the existing PayFast source validator. Live spoofing/HTTPS checks passed; 10 demo tests / 53 assertions passed locally. The user approved a disposable tester and temporary one-use login, and the temporary route was removed. PayFast accepted the initial checkout but failed its wallet verification before sending any observed ITN; a fresh R5 test is prepared. No completed sandbox payment or production approval is claimed. See NGROK_SETUP.md for current details; the original blockers below describe the earlier delivery snapshot.
 
 **Real sandbox acceptance BLOCKED; HOLD production release.** Supplied credentials are present but not provider-verified. Callback URLs retain `your-approved-public-host`; there is no approved public ingress, actual PayFast ITN/transaction or real fulfilment evidence. No tunnel was provisioned or failed check bypassed. Mocked HTTP responses are not real payments.

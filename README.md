@@ -2,7 +2,7 @@
 
 Standalone `vmt/payfast` Composer package for Laravel 12/13 and PHP 8.3+. One-time ZAR hosted checkout, verified ITN completion, encrypted credential snapshots, tenant/merchant context, durable outcome delivery, and database-backed fulfilment idempotency.
 
-**Release status: integration candidate; real sandbox acceptance remains required before production.** MySQL 8.4 concurrency passed in the baseline GitHub CI; Phase 2 evidence and outstanding deployment requirements are in [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md).
+**Release status: tested one-time sandbox flow accepted; production deployment approval remains outstanding.** Real R5 checkout/ITN/fulfilment evidence is in [sandbox acceptance](docs/SANDBOX_ACCEPTANCE_2026-10-18.md). MySQL 8.4 concurrency passed on Laravel 12/13 CI; see [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md) for limits and remaining checks.
 
 ## Installation and use
 

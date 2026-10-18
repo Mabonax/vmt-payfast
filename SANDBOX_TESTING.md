@@ -1,8 +1,8 @@
 # Real sandbox acceptance procedure
 
-Status: **not executed**. Automated HTTP mocks are not provider proof.
+Status: **real R5 one-time flow PASSED on 2026-10-18**; see docs/SANDBOX_ACCEPTANCE_2026-10-18.md. Automated mocks remain distinct from real provider proof.
 
-Phase 2 provides a separate app at `C:\xampp\htdocs\vmt_payfast_demo`; see DEMO_APPLICATION.md. User-supplied sandbox settings and real ngrok HTTPS callbacks are configured privately. Public ingress spoofing checks passed (NGROK_SETUP.md). PayFast accepted the first checkout but reported “Unable to verify payment” on the wallet action, with no provider ITN received. Completed provider acceptance remains BLOCKED; no source check is disabled.
+Phase 2 provides a separate app at `C:\xampp\htdocs\vmt_payfast_demo`. Real ngrok HTTPS and source checks passed, followed by a real COMPLETE ITN and one fulfilment, including after queued-event replay. Return-before-ITN and actual provider cancellation were verified on an unpaid attempt. The earlier R1.05 failure is retained as a pending historical attempt with unconfirmed cause. No source check was disabled.
 
 1. Register/sign in at https://sandbox.payfast.co.za/ and configure your sandbox merchant ID, key and account passphrase. Obtain them through PayFast's dashboard; never paste them into tickets or commit them.
 2. Install the package in a Laravel staging application and migrate. Set a valid persistent APP_KEY. Use an isolated test order loaded through the application's normal service/repository.

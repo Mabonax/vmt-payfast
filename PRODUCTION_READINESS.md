@@ -1,22 +1,22 @@
 # Production readiness — Phase 2
 
-2026-10-18. **HOLD production release/tagging.** Automated and MySQL acceptance passed; real PayFast sandbox acceptance and deployment checks remain outstanding. No production approval or version tag was created.
+2026-10-18. **Real one-time sandbox acceptance PASSED; HOLD production release pending deployment review.** See [dated evidence](docs/SANDBOX_ACCEPTANCE_2026-10-18.md). No production approval or version tag was created.
 
-**Local ngrok follow-up:** HTTPS is now established and all callback URLs are configured privately. Public source-header spoofing/HTTPS checks passed. The demo now passes 10 tests / 53 assertions and prepares fixed R5 sandbox orders. PayFast accepted the initial R1.05 checkout but displayed “Unable to verify payment” after the wallet action; no provider ITN reached Laravel for that attempt, and it remains PENDING with zero fulfilments. A fresh R5 attempt is prepared to rule out the documented payment minimum; its outcome is not yet verified. See NGROK_SETUP.md. Earlier CI counts below remain the evidence for their specified commits.
+**Current evidence:** HTTPS/spoofing checks passed. A real R5 ITN completed at 14:33:15 UTC / 16:33:15 SAST; payment/order COMPLETED, one delivered outbox row, one fulfilment marker, completion count 1 and zero failed jobs. Event replay preserved those counts. Real return-before-ITN and provider cancellation checks passed. Demo: 10 tests / 53 assertions. The earlier R1.05 provider failure remains pending with unconfirmed cause. Earlier CI counts below apply to their specified commits.
 
 | Capability | Implemented | Automated test passed | Real sandbox verified | MySQL verified | Blocked / limitation |
 |---|---|---|---|---|---|
-| One-time ZAR checkout and ordered signatures | Yes | Laravel 12/13 | Checkout accepted; completion not verified | Payment storage exercised | Provider wallet verification failed on first attempt |
-| Signature/source/merchant/amount/server validation | Yes | Mocked provider responses and rejection tests | No | Concurrent verified writes exercised | No actual provider ITN received |
-| Strict ingress source adapter | Yes, opt-in | Trusted/untrusted/malformed/missing IP cases; live ngrok spoofing checks | No provider ITN yet | Not DB-dependent | Real provider source still needs acceptance |
+| One-time ZAR checkout and ordered signatures | Yes | Laravel 12/13 | **Real R5 completed** | Payment storage exercised | Production account/deployment review pending |
+| Signature/source/merchant/amount/server validation | Yes | Mocked responses/rejection tests | **Real COMPLETE ITN passed all checks** | Concurrent verified writes exercised | Tested sandbox account/path only |
+| Strict ingress source adapter | Yes, opt-in | Header tests and live ngrok spoofing checks | **Actual PayFast source passed** | Not DB-dependent | Production ingress needs separate review |
 | Locks, one completion/outbox/audit | Yes | Two independent PHP processes | No provider claim | **MySQL 8.4 passed in both framework jobs** | Local MySQL/Docker unavailable |
-| Durable fulfilment ledger and queue replay | Yes | Package replay/rollback; real demo DB queue worker | No | **One marker in concurrent processing** | External effects require host idempotency |
+| Durable fulfilment ledger and queue replay | Yes | Package replay/rollback; real demo DB worker | **One fulfilment, even after event replay** | **One marker in concurrent processing** | External effects require host idempotency |
 | Outbox recovery | Yes | Listener retry; rejects unsafe outer transaction | Not provider-dependent | Completion uniqueness verified | At-least-once delivery; supervise scheduler/workers |
-| Authenticated isolated demo, server-priced orders | Yes | **10 tests / 53 assertions locally** | Checkout reached; wallet verification failed | Demo uses dedicated SQLite | Completed provider flow remains blocked |
-| Return/cancel, scoped status and audit views | Yes | Browser cannot complete; cross-user denial | No | No provider claim | External return/cancel acceptance pending |
+| Authenticated isolated demo, server-priced orders | Yes | **10 tests / 53 assertions** | **Real provider flow completed** | Demo uses dedicated SQLite | Local sandbox account/path only |
+| Return/cancel, scoped status and audit views | Yes | Browser cannot complete; cross-user denial | **Real return-before-ITN and provider cancel passed** | Not DB engine proof | Browser cancel deliberately leaves payment pending |
 | Tenant/merchant isolation and credential rotation | Yes | Scoped checks and original snapshot tests | No | Scoped concurrent fulfilment | Real host resolver/ownership review pending |
 | Pending exception report and diagnostics | Yes | Scoped report; controlled failure categories | No | Not settlement proof | Live missing-ITN diagnosis pending |
-| APP_KEY and credentials | Encrypted snapshots; preserved demo key | Encryption/rotation tests | Account validity not verified | Snapshot used by both workers | Key backup/restore review required |
+| APP_KEY and credentials | Encrypted snapshots; preserved demo key | Encryption/rotation tests | **Configured account signed checkout and ITN validated** | Snapshot used by both workers | Key backup/restore review required |
 | VCS/path installation | `dev-main` documented | Local path and CI demo dependency install | Not applicable | Not applicable | No approved tag |
 | Refunds, recurring/subscriptions, split/marketplace settlements, analytics, disputes, other gateways | **Not implemented** | Not claimed | Not claimed | Not claimed | Future approved scope only |
 
@@ -65,15 +65,15 @@ composer validate --strict
 
 Passed: 7 tests / 39 assertions, minute-based outbox schedule and three payment routes present, Composer valid. Local login HTTP smoke returned 200 with sandbox banner/form. This is not authenticated manual browser or provider proof.
 
-## Real sandbox result: BLOCKED
+## Real sandbox result: PASSED for tested one-time flow
 
 User-supplied sandbox settings were privately copied from the ignored package `.env` to the demo `.env`, preserving APP_KEY. The existing ngrok account token was updated by the user, HTTPS callbacks configured and live spoofing checks passed. The user explicitly approved a disposable tester and two-minute single-use login; that temporary route was removed after login. Scheduler and worker run in hidden background processes.
 
-PayFast accepted the signed R1.05 checkout and displayed its sandbox wallet. After the user's wallet action, the provider reported “Unable to verify payment”. No provider ITN reached the demo for that attempt; the payment remains PENDING with no fulfilment. Public callback POST probes reach Laravel and are correctly rejected as malformed; those probes are not provider notifications. A fresh R5 sandbox attempt is prepared, without claiming the amount was the root cause. Real payment completion, ITN signature/source/merchant/amount/server confirmation and fulfilment remain unverified. No security check was bypassed.
+The initial R1.05 attempt failed at PayFast before any observed ITN. The fresh R5 attempt completed with a real notification and server confirmation, then fulfilled exactly once. Queued event replay did not duplicate fulfilment. An unpaid attempt stayed pending after both return-before-ITN and actual provider cancellation. No check was bypassed. Real duplicate provider delivery was not exercised; documented sandbox delivery is once. The dated evidence records exact references, timestamps and limits.
 
 ## Remaining production checks
 
-- Real checkout, signature/server confirmation, return-before-ITN, cancellation and supported replay acceptance.
+- The tested sandbox checkout/ITN/return/cancel flow is accepted; additional accounts/methods and any supported provider replay need separate evidence.
 - Explicit production merchant/passphrase/mode approval; private sandbox credentials cannot be identified by syntax alone.
 - Reviewed TLS/DNS/ingress, origin restrictions and source-header overwrite.
 - Host authorization/pricing/tenant resolver and order-level multiple-attempt safeguards.
